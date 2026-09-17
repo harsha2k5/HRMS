@@ -22,7 +22,9 @@ COPY . /var/www/html/
 
 # Fix Windows CRLF line endings on entrypoint script and grant execution permissions
 RUN sed -i -e 's/\r$//' /var/www/html/docker-entrypoint.sh \
-    && chmod +x /var/www/html/docker-entrypoint.sh
+    && chmod +x /var/www/html/docker-entrypoint.sh \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
 
 # Expose standard HTTP port (can be overridden dynamically by $PORT on Render/Railway)
 EXPOSE 80

@@ -1,14 +1,18 @@
+DirectoryIndex index.php public/index.php index.html
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
 
-    # Allow direct access to existing files and directories
-    RewriteCond %{REQUEST_FILENAME} -f [OR]
-    RewriteCond %{REQUEST_FILENAME} -d
+    # Allow direct access to existing files (css, js, images, etc.)
+    RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
     # Map /assets/ to public/assets/
     RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+
+    # Map /uploads/ to storage/uploads/
+    RewriteRule ^uploads/(.*)$ storage/uploads/$1 [L]
 
     # Route /api/ requests with or without .php
     RewriteCond %{REQUEST_URI} ^/api/ [NC]
@@ -25,3 +29,4 @@
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set X-XSS-Protection "1; mode=block"
 </IfModule>
+
