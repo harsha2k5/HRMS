@@ -23,8 +23,9 @@ class Database {
 
     private static function initConnection(): void {
         $preferredDriver = env('DB_CONNECTION', 'mysql');
+        $hasCloudDb = env('DATABASE_URL') || env('MYSQL_URL') || env('MYSQLHOST');
 
-        if ($preferredDriver === 'mysql') {
+        if ($preferredDriver === 'mysql' || $hasCloudDb) {
             try {
                 self::connectMySQL();
                 self::$activeDriver = 'mysql';
@@ -43,30 +44,51 @@ class Database {
     }
 
     private static function connectMySQL(): void {
-        $host = env('DB_HOST', '127.0.0.1');
-        $port = env('DB_PORT', '3306');
-        $db   = env('DB_NAME', 'hrms_db');
-        $user = env('DB_USER', 'root');
-        $pass = env('DB_PASSWORD', '');
+        $dbUrl = env('DATABASE_URL') ?: env('MYSQL_URL') ?: env('JAWSDB_URL');
+        if ($dbUrl) {
+            $parsed = parse_url($dbUrl);
+            $host = $parsed['host'] ?? '127.0.0.1';
+            $port = isset($parsed['port']) ? (string)$parsed['port'] : '3306';
+            $user = isset($parsed['user']) ? urldecode($parsed['user']) : 'root';
+            $pass = isset($parsed['pass']) ? urldecode($parsed['pass']) : '';
+            $db   = isset($parsed['path']) ? ltrim($parsed['path'], '/') : 'hrms_db';
+        } else {
+            $host = env('MYSQLHOST') ?: env('DB_HOST', '127.0.0.1');
+            $port = env('MYSQLPORT') ?: env('DB_PORT', '3306');
+            $db   = env('MYSQLDATABASE') ?: env('DB_NAME', 'hrms_db');
+            $user = env('MYSQLUSER') ?: env('DB_USER', 'root');
+            $pass = env('MYSQLPASSWORD') ?: env('DB_PASSWORD', '');
+        }
 
-        // Attempt initial connection to MySQL server
-        $dsnWithoutDb = "mysql:host={$host};port={$port};charset=utf8mb4";
-        $tempPdo = new PDO($dsnWithoutDb, $user, $pass, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_TIMEOUT => 2
-        ]);
-
-        // Ensure database exists
-        $tempPdo->exec("CREATE DATABASE IF NOT EXISTS `{$db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-
-        // Connect to the specific database
         $dsnWithDb = "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4";
-        self::$instance = new PDO($dsnWithDb, $user, $pass, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false
-        ]);
+
+        try {
+            // Direct connection to target database (ideal for managed cloud services)
+            self::$instance = new PDO($dsnWithDb, $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_TIMEOUT => 4
+            ]);
+        } catch (PDOException $pe) {
+            // If database does not exist (MySQL error 1049), attempt creation if permissions allow
+            if ($pe->getCode() == 1049) {
+                $dsnWithoutDb = "mysql:host={$host};port={$port};charset=utf8mb4";
+                $tempPdo = new PDO($dsnWithoutDb, $user, $pass, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_TIMEOUT => 3
+                ]);
+                $tempPdo->exec("CREATE DATABASE IF NOT EXISTS `{$db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                self::$instance = new PDO($dsnWithDb, $user, $pass, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false
+                ]);
+            } else {
+                throw $pe;
+            }
+        }
 
         // Check if tables exist, if not run schema and seed
         $stmt = self::$instance->query("SHOW TABLES LIKE 'users'");

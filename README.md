@@ -189,3 +189,17 @@ Run the automated test suite from the terminal:
 php test_suite.php
 ```
 All 13 assertions covering database connectivity, password verification, seed counts, role scope authorization, and payroll arithmetic are evaluated and passed.
+
+---
+
+## ☁️ Cloud & Production Deployment
+
+For deploying to cloud platforms (**Render**, **Railway**, **Fly.io**, or **Docker**), refer to the step-by-step guide:
+👉 **[DEPLOYMENT.md](DEPLOYMENT.md)**
+
+### Quick Summary:
+* **Render.com:** 1-Click deploy from GitHub via Docker (Free tier). Ready-to-go `render.yaml` Blueprint included.
+* **Railway.app:** 1-Click deploy from GitHub + instant managed cloud MySQL database.
+* **Fly.io:** Run `fly launch` and `fly deploy`.
+* **Docker Compose:** Run `docker compose up --build` for full local multi-container staging with MySQL 8.
+

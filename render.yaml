@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: apex-global-hrms
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_NAME
+        value: "Apex Global HRMS"
+      # Uses SQLite by default for instant 0-configuration free deployment.
+      # To use MySQL, set DB_CONNECTION=mysql and provide DATABASE_URL.
+      - key: DB_CONNECTION
+        value: sqlite
