@@ -51,6 +51,7 @@ const API = {
 
     try {
       const response = await fetch(url, {
+        credentials: 'include',
         ...options,
         headers
       });

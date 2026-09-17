@@ -56,6 +56,18 @@ if (APP_DEBUG) {
 // Timezone
 date_default_timezone_set(env('TIMEZONE', 'America/New_York'));
 
+// Cross-Origin Resource Sharing (CORS) for external frontends (e.g. Netlify)
+if (isset($_SERVER['HTTP_ORIGIN'])) {
+    header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+    header('Access-Control-Allow-Credentials: true');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
+        exit(0);
+    }
+}
+
 // Ensure required upload directories exist
 $subdirs = ['contracts', 'certificates', 'identity', 'policies', 'resumes', 'avatars', 'general'];
 foreach ($subdirs as $subdir) {

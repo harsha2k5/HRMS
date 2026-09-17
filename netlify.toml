@@ -1,0 +1,26 @@
+# =========================================================
+# Netlify Configuration — Apex Global HRMS Frontend
+# =========================================================
+
+[build]
+  publish = "public"
+
+# Proxy all /api/* requests to your live Render backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://hrms-ej23.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Proxy all /uploads/* requests to your live Render storage
+[[redirects]]
+  from = "/uploads/*"
+  to = "https://hrms-ej23.onrender.com/uploads/:splat"
+  status = 200
+  force = true
+
+# SPA client-side fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
