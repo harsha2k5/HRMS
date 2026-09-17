@@ -1,0 +1,27 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Allow direct access to existing files and directories
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Map /assets/ to public/assets/
+    RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+
+    # Route /api/ requests with or without .php
+    RewriteCond %{REQUEST_URI} ^/api/ [NC]
+    RewriteCond %{DOCUMENT_ROOT}/api/$1.php -f
+    RewriteRule ^api/(.*)$ api/$1.php [L,QSA]
+
+    # Everything else routes to public/index.php
+    RewriteRule ^(.*)$ public/index.php [L,QSA]
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
